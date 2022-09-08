@@ -1,0 +1,60 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: $name-ns
+  labels:
+    run: $name
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $name-deploy
+  namespace: $name-ns
+spec:
+  selector:
+    matchLabels:
+      run: $name
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: $name
+    spec:
+      containers:
+      - name: $name
+        image: $registry_host:$registry_port/$name:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $name-svc
+  namespace: $name-ns
+  labels:
+    run: $name
+spec:
+  ports:
+  - port: 5000
+  selector:
+    run: $name
+  type: NodePort
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: $name-hpa
+  namespace: $name-ns
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: $name-deploy
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
