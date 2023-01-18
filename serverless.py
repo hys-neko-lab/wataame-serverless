@@ -30,7 +30,7 @@ class Serverless(serverless_pb2_grpc.ServerlessServicer):
         # ユーザーが書いた関数をHandler.pyとして作成
         workdir = 'templates/docker/work'
         os.makedirs(workdir, exist_ok=True)
-        handler = os.path.join(workdir, "Handler.py")#'templates/docker/work/Handler.py'
+        handler = os.path.join(workdir, "Handler.py")
         if(os.path.isfile(handler)):
             os.remove(handler)
         with open(handler, 'w') as h:
@@ -43,7 +43,7 @@ class Serverless(serverless_pb2_grpc.ServerlessServicer):
             name=request.name
         )
         print(app)
-        appfile = os.path.join(workdir, "app.py")#'templates/docker/work/app.py'
+        appfile = os.path.join(workdir, "app.py")
         if(os.path.isfile(appfile)):
             os.remove(appfile)
         with open(appfile, 'w') as h:
