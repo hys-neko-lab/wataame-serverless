@@ -28,11 +28,26 @@ class Serverless(serverless_pb2_grpc.ServerlessServicer):
             return serverless_pb2.CreateReply(message=message)
 
         # ユーザーが書いた関数をHandler.pyとして作成
-        handler = 'templates/docker/work/Handler.py'
+        workdir = 'templates/docker/work'
+        os.makedirs(workdir, exist_ok=True)
+        handler = os.path.join(workdir, "Handler.py")#'templates/docker/work/Handler.py'
         if(os.path.isfile(handler)):
             os.remove(handler)
-        with open('templates/docker/work/Handler.py', 'w') as h:
+        with open(handler, 'w') as h:
             print(request.source, file=h)
+        
+        # Handler.pyを呼び出すWebアプリを設定
+        with open('templates/app_template.py') as a:
+            t = string.Template(a.read())
+        app = t.substitute(
+            name=request.name
+        )
+        print(app)
+        appfile = os.path.join(workdir, "app.py")#'templates/docker/work/app.py'
+        if(os.path.isfile(appfile)):
+            os.remove(appfile)
+        with open(appfile, 'w') as h:
+            print(app, file=h)
 
         # Dockerイメージをビルド
         tag = self.registry_host+':'+self.registry_port+'/'+request.name
@@ -45,6 +60,7 @@ class Serverless(serverless_pb2_grpc.ServerlessServicer):
         # Kubernetesからpullできるようにプライベートレジストリにpushする
         self.docker_client.images.push(tag)
         os.remove(handler)
+        os.remove(appfile)
 
         # Kubernetes名前空間以下を作成するyamlを書き換え
         with open('templates/serverless.yaml') as f:

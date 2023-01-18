@@ -131,3 +131,6 @@ dmypy.json
 # gRPC
 *pb2.py
 *pb2_grpc.py
+
+# wataame-serverless
+work/
